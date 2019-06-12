@@ -12,8 +12,8 @@
 //BME280_I2C bme;              // I2C using default 0x77 
 BME280_I2C bme(0x76);  // I2C using address 0x76
 //int nb_seconds = 1800;
-int nb_seconds_int = 6;
-int nb_seconds = 30;
+int nb_seconds_int = 60;
+int nb_seconds = 300;
 int time_stp = 0;
 int sensor_output =0;
 int VRef = 5;
