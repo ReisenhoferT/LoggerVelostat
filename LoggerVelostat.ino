@@ -12,34 +12,51 @@
 //BME280_I2C bme;              // I2C using default 0x77 
 BME280_I2C bme(0x76);  // I2C using address 0x76
 //int nb_seconds = 1800;
-int nb_seconds = 300;
+int nb_seconds_int = 6;
+int nb_seconds = 30;
 int time_stp = 0;
+int sensor_output =0;
+int VRef = 5;
+int max_scale = 1023;
+int R_pont = 560;
+
+float int_to_volt(const int & val) {
+  return float(val * VRef) / float (max_scale);
+}
+
+float R1(const float & U, const float & U2, const float & R2) {
+  return (R2 * (U - U2)) / (U2);
+}
+
+
 void setup() {
   Serial.begin(9600);
-  Serial.println("Bosch BME280 Barometric Pressure - Humidity - Temp Sensor | cactus.io"); 
-
-  if (!bme.begin()) {
-    Serial.println("Could not find a valid BME280 sensor, check wiring!");
-    while (1);
-  }
-
+  bme.begin();
   bme.setTempCal(-1);
-  
-  Serial.println("Time\t\tPressure\tHumdity\t\tTemp\t\tTemp");
   delay(3000);
   
 }
 
 void loop() {
-
+  int count = 0;
+  float mean_R1 = 0;
+  
+  for (int j=0; j< nb_seconds_int; j++) {
+    
+  
+    sensor_output = analogRead(A0);
+    float voltage = int_to_volt(sensor_output);
+    float Val_R1 = R1(float(VRef), voltage, float(R_pont));
+    mean_R1 = (float(count) * mean_R1 + Val_R1) / (float(count+1));
+    count ++;
+    delay(1000);  
+  }
     bme.readSensor();
-    time_stp = millis();
+    Serial.print(bme.getPressure_MB()); Serial.print(",");    // Pressure in millibars
+    Serial.print(bme.getHumidity()); Serial.print(",");
+    Serial.print(bme.getTemperature_C()); Serial.print(",");
+    Serial.print(mean_R1); Serial.println("\n");
 
-    Serial.print(time_stp/1000); Serial.print("\t\t");
-    Serial.print(bme.getPressure_MB()); Serial.print("\t\t");    // Pressure in millibars
-    Serial.print(bme.getHumidity()); Serial.print("\t\t");
-    Serial.print(bme.getTemperature_C()); Serial.print(" *C\t");
-    Serial.print(bme.getTemperature_F()); Serial.println(" *F\t");
 
     // add a 2 second delay to slow down the output
     // TODO: Attention delay(long) maximum tempo de 65 sec écrire une fonction
